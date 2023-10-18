@@ -1,9 +1,15 @@
 package com.example.searchbarphrasestraductor
 
-import android.media.browse.MediaBrowser
-import android.media.browse.MediaBrowser.MediaItem
+
+import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.pm.PackageManager
+import android.graphics.Rect
+import android.graphics.drawable.Icon
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.activity.ComponentActivity
@@ -21,6 +27,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toAndroidRect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
@@ -28,6 +37,19 @@ import com.example.searchbarphrasestraductor.ui.theme.SearchBarPhrasesTraductorT
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
+    private val isPipSupported by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            packageManager.hasSystemFeature(
+                PackageManager.FEATURE_PICTURE_IN_PICTURE
+            )
+        } else {
+            false
+        }
+    }
+
+    private var videoViewBounds = Rect()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -57,27 +79,63 @@ class MainActivity : ComponentActivity() {
                             palabras ->
                             Text("$palabras")
                         }
+                            showAndroidView(query)
                     }
                 }
             }
         }
-            AndroidView(
-                factory = {
-                    VideoView( it, null).apply {
-                        setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.Hola}"))
-                        start()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
     }
 }
+
+
+@Composable
+private fun showAndroidView(query:String){
+    if ( palabras.contains(query)) {
+        AndroidView(
+            factory = {
+                VideoView( it, null).apply {
+                    setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
+                    start()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned {
+                    videoViewBounds = it.boundsInWindow().toAndroidRect()
+                }
+        )
+    }
+}
+
+    private fun updatedPipParams(): PictureInPictureParams? {
+        return PictureInPictureParams.Builder()
+            .setSourceRectHint(videoViewBounds)
+            .setAspectRatio(Rational(16,9))
+            .setActions(
+                listOf(
+                    RemoteAction(
+                        Icon.createWithResource(
+                            R.drawable.baseline_arrow_forward_ios_24
+                        ),
+
+                    )
+                )
+            )
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!isPipSupported) {
+            return
+        }
+        enterPictureInPictureMode()
+    }
+
 
 private val palabras = listOf(
     "Hola",
     "Como",
-    "Estás",
+    "estás",
     "Bien",
     "Adiós",
     "Por favor",
