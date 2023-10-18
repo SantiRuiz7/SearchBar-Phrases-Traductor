@@ -3,6 +3,9 @@ package com.example.searchbarphrasestraductor
 
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.graphics.drawable.Icon
@@ -37,6 +40,12 @@ import com.example.searchbarphrasestraductor.ui.theme.SearchBarPhrasesTraductorT
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
+    class MyReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent?) {
+            println("Clicked on Pip Action")
+        }
+    }
 
     private val isPipSupported by lazy {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -115,8 +124,11 @@ private fun showAndroidView(query:String){
                 listOf(
                     RemoteAction(
                         Icon.createWithResource(
+                            applicationContext,
                             R.drawable.baseline_arrow_forward_ios_24
                         ),
+                        "Video",
+                        "Descripcion",
 
                     )
                 )
