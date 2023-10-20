@@ -20,9 +20,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,16 +36,19 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.searchbarphrasestraductor.ui.theme.SearchBarPhrasesTraductorTheme
 
@@ -65,6 +73,7 @@ class MainActivity : ComponentActivity() {
 
     private var videoViewBounds = Rect()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -77,44 +86,73 @@ class MainActivity : ComponentActivity() {
                 ) {
                     var query by remember { mutableStateOf("") }
                     var active by remember { mutableStateOf(false) }
+                    var isTrailingIconClicked by remember { mutableStateOf(false) }
+                    var isCardVisible by remember { mutableStateOf(false) } // Nuevo estado para controlar la visibilidad de la Card
 
                     SearchBar(
                         query = query,
                         onQueryChange = { query = it },
                         onSearch = {
-                            Toast.makeText(ctx, query, Toast.LENGTH_SHORT).show()
                             active = false
                         },
                         active = active,
-                        onActiveChange = { active = it},
-                        placeholder = { Text(text = "Search")},
-                        leadingIcon = { IconButton(onClick = { /*TODO*/ }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null)
-                        }},
-                        trailingIcon = { IconButton(onClick = { /*TODO Agregar video en un toolbar */ }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null)
-                        }}
-                    ) {
-                        if (query.isNotEmpty()){
-                        val filteredWords = palabras.filter { it.contains(query, true) }
-                        filteredWords.forEach{
-                            palabras ->
-                            Text("$palabras")
+                        onActiveChange = { active = it },
+
+                        placeholder = { Text(text = "Search") },
+                        leadingIcon = {
+                            IconButton(onClick = { /*TODO*/ }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                isTrailingIconClicked = true
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null
+                                )
+                            }
                         }
-                            showAndroidView(query)
+                    ) {
+
+                        if (isCardVisible) {
+                            // Muestra la Card cuando isCardVisible es verdadero
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.4f)
+                                    .padding(16.dp) // Puedes ajustar el espaciado según tus preferencias
+                            ) {
+                                Text(text = "Contenido de la Card")
+                                AndroidView(
+                                    factory = {
+                                        VideoView(it, null).apply {
+                                            setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
+                                            start()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(5.dp)
+                                    )
+                            }
+                        }
+                        LaunchedEffect(isTrailingIconClicked) {
+                            if (isTrailingIconClicked) {
+                                isCardVisible = true
+                                isTrailingIconClicked = false
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
-@Composable
+/*@Composable
 private fun showAndroidView(query:String){
 
     if ( palabras.contains(query)) {
@@ -134,7 +172,8 @@ private fun showAndroidView(query:String){
                 }
         )
     }
-}
+}*/
+/*
 
     private fun updatedPipParams(): PictureInPictureParams? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -227,3 +266,4 @@ private val palabras = listOf(
     "Salud"
 )
 }
+*/
