@@ -118,34 +118,37 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) {
+                            if (isCardVisible) {
 
-                        if (isCardVisible) {
-                            // Muestra la Card cuando isCardVisible es verdadero
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.4f)
-                                    .padding(16.dp) // Puedes ajustar el espaciado según tus preferencias
-                            ) {
-                                Text(text = "Contenido de la Card")
-                                AndroidView(
-                                    factory = {
-                                        VideoView(it, null).apply {
-                                            setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
-                                            start()
-                                        }
-                                    },
+                                if (query == "hola"){
+
+                                // Muestra la Card cuando isCardVisible es verdadero
+                                Card(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(5.dp)
+                                        .fillMaxWidth(0.4f)
+                                        .padding(16.dp) // Puedes ajustar el espaciado según tus preferencias
+                                ) {
+                                    Text(text = "Contenido de la Card")
+                                    AndroidView(
+                                        factory = {
+                                            VideoView(it, null).apply {
+                                                setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
+                                                start()
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(5.dp)
                                     )
+                                }
                             }
-                        }
-                        LaunchedEffect(isTrailingIconClicked) {
-                            if (isTrailingIconClicked) {
-                                isCardVisible = true
-                                isTrailingIconClicked = false
                             }
-                        }
+                            LaunchedEffect(isTrailingIconClicked) {
+                                if (isTrailingIconClicked) {
+                                    isCardVisible = true
+                                    isTrailingIconClicked = false
+                                }
+                            }
                     }
                 }
             }
