@@ -1,6 +1,7 @@
 package com.example.searchbarphrasestraductor
 
 
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
 import android.content.BroadcastReceiver
@@ -19,7 +20,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
@@ -80,7 +86,18 @@ class MainActivity : ComponentActivity() {
                             active = false
                         },
                         active = active,
-                        onActiveChange = { active = it}
+                        onActiveChange = { active = it},
+                        placeholder = { Text(text = "Search")},
+                        leadingIcon = { IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null)
+                        }},
+                        trailingIcon = { IconButton(onClick = { /*TODO Agregar video en un toolbar */ }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null)
+                        }}
                     ) {
                         if (query.isNotEmpty()){
                         val filteredWords = palabras.filter { it.contains(query, true) }
@@ -99,6 +116,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun showAndroidView(query:String){
+
     if ( palabras.contains(query)) {
         AndroidView(
             factory = {
@@ -110,29 +128,39 @@ private fun showAndroidView(query:String){
             modifier = Modifier
                 .fillMaxWidth()
                 .onGloballyPositioned {
-                    videoViewBounds = it.boundsInWindow().toAndroidRect()
+                    videoViewBounds = it
+                        .boundsInWindow()
+                        .toAndroidRect()
                 }
         )
     }
 }
 
     private fun updatedPipParams(): PictureInPictureParams? {
-        return PictureInPictureParams.Builder()
-            .setSourceRectHint(videoViewBounds)
-            .setAspectRatio(Rational(16,9))
-            .setActions(
-                listOf(
-                    RemoteAction(
-                        Icon.createWithResource(
-                            applicationContext,
-                            R.drawable.baseline_arrow_forward_ios_24
-                        ),
-                        "Video",
-                        "Descripcion",
-
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PictureInPictureParams.Builder()
+                .setSourceRectHint(videoViewBounds)
+                .setAspectRatio(Rational(16,9))
+                .setActions(
+                    listOf(
+                        RemoteAction(
+                            Icon.createWithResource(
+                                applicationContext,
+                                R.drawable.baseline_arrow_forward_ios_24
+                            ),
+                            "Video",
+                            "Descripcion",
+                            PendingIntent.getBroadcast(
+                                applicationContext,
+                                0,
+                                Intent(applicationContext, MyReceiver::class.java),
+                                PendingIntent.FLAG_IMMUTABLE
+                            )
+                        )
                     )
                 )
-            )
+                .build()
+        } else null
     }
 
     override fun onUserLeaveHint() {
@@ -140,7 +168,12 @@ private fun showAndroidView(query:String){
         if (!isPipSupported) {
             return
         }
-        enterPictureInPictureMode()
+        updatedPipParams()?.let { params ->
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                enterPictureInPictureMode(params)
+            }
+        }
     }
 
 
