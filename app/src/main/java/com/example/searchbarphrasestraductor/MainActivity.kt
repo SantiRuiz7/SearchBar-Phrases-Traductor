@@ -1,15 +1,11 @@
 package com.example.searchbarphrasestraductor
 
 
-import android.app.PendingIntent
-import android.app.PictureInPictureParams
-import android.app.RemoteAction
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Rect
-import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,12 +14,11 @@ import android.widget.Toast
 import android.widget.VideoView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -43,9 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toAndroidRect
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,19 +52,6 @@ class MainActivity : ComponentActivity() {
             println("Clicked on Pip Action")
         }
     }
-
-    private val isPipSupported by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            packageManager.hasSystemFeature(
-                PackageManager.FEATURE_PICTURE_IN_PICTURE
-            )
-        } else {
-            false
-        }
-    }
-
-    private var videoViewBounds = Rect()
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,15 +99,15 @@ class MainActivity : ComponentActivity() {
                     ) {
                             if (isCardVisible) {
 
-                                if (query == "hola"){
-
                                 // Muestra la Card cuando isCardVisible es verdadero
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth(0.4f)
                                         .padding(16.dp) // Puedes ajustar el espaciado según tus preferencias
                                 ) {
+
                                     Text(text = "Contenido de la Card")
+
                                     AndroidView(
                                         factory = {
                                             VideoView(it, null).apply {
@@ -141,7 +120,7 @@ class MainActivity : ComponentActivity() {
                                             .padding(5.dp)
                                     )
                                 }
-                            }
+
                             }
                             LaunchedEffect(isTrailingIconClicked) {
                                 if (isTrailingIconClicked) {
@@ -155,6 +134,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
+
+
+
+
+
+
+
 /*@Composable
 private fun showAndroidView(query:String){
 
