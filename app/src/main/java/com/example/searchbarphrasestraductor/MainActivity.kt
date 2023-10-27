@@ -4,21 +4,17 @@ package com.example.searchbarphrasestraductor
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Rect
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.util.Rational
-import android.widget.Toast
+import android.util.Log
 import android.widget.VideoView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -30,26 +26,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.searchbarphrasestraductor.ui.theme.SearchBarPhrasesTraductorTheme
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
-
     class MyReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent?) {
-            println("Clicked on Pip Action")
         }
     }
 
@@ -57,7 +48,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SearchBarPhrasesTraductorTheme {
-                val ctx = LocalContext.current
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -66,7 +56,17 @@ class MainActivity : ComponentActivity() {
                     var query by remember { mutableStateOf("") }
                     var active by remember { mutableStateOf(false) }
                     var isTrailingIconClicked by remember { mutableStateOf(false) }
-                    var isCardVisible by remember { mutableStateOf(false) } // Nuevo estado para controlar la visibilidad de la Card
+                    var isCardVisible by remember { mutableStateOf(false) }
+
+                    val words = query.split(" ")
+
+                    val videoMapping = mapOf(
+                        "hola" to "hola.m4v",
+                        "gracias" to "gracias.m4v"
+                        )
+
+                    val assetManager = applicationContext.assets
+
 
                     SearchBar(
                         query = query,
@@ -87,9 +87,11 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         trailingIcon = {
-                            IconButton(onClick = {
+                            IconButton(
+                                onClick = {
                                 isTrailingIconClicked = true
-                            }) {
+                            },
+                                enabled = true) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = null
@@ -97,164 +99,51 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) {
-                            if (isCardVisible) {
+                        if (isCardVisible) {
 
-                                // Muestra la Card cuando isCardVisible es verdadero
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.4f)
-                                        .padding(16.dp) // Puedes ajustar el espaciado según tus preferencias
-                                ) {
+                            LazyColumn {
+                                items(words) { word ->
 
-                                    Text(text = "Contenido de la Card")
-
-                                    AndroidView(
-                                        factory = {
-                                            VideoView(it, null).apply {
-                                                setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
-                                                start()
-                                            }
-                                        },
+                                    Card(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(5.dp)
-                                    )
-                                }
+                                            .fillMaxWidth(0.2f)
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(text = word)
 
+                                        AndroidView(
+                                            factory = {
+                                                VideoView(it, null).apply {
+                                                    val videoFileName = videoMapping[word] ?: ""
+                                                    if (videoFileName.isNotEmpty()) {
+                                                        try {
+                                                            val inputStream = assetManager.open(videoFileName)
+                                                            setVideoURI(Uri.parse(inputStream.toString()))
+                                                            start()
+                                                        } catch (e: IOException) {
+                                                            // Si no encuentra el archivo o ocurre un error al abrirlo.
+                                                            Log.e("VideoApp", "Error al abrir el archivo: $videoFileName", e)
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(5.dp)
+                                        )
+                                    }
+                                }
                             }
                             LaunchedEffect(isTrailingIconClicked) {
-                                if (isTrailingIconClicked) {
+                                  if (isTrailingIconClicked) {
                                     isCardVisible = true
                                     isTrailingIconClicked = false
                                 }
                             }
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-/*@Composable
-private fun showAndroidView(query:String){
-
-    if ( palabras.contains(query)) {
-        AndroidView(
-            factory = {
-                VideoView( it, null).apply {
-                    setVideoURI(Uri.parse("android.resource://$packageName/${R.raw.hola}"))
-                    start()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .onGloballyPositioned {
-                    videoViewBounds = it
-                        .boundsInWindow()
-                        .toAndroidRect()
-                }
-        )
-    }
-}*/
-/*
-
-    private fun updatedPipParams(): PictureInPictureParams? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            PictureInPictureParams.Builder()
-                .setSourceRectHint(videoViewBounds)
-                .setAspectRatio(Rational(16,9))
-                .setActions(
-                    listOf(
-                        RemoteAction(
-                            Icon.createWithResource(
-                                applicationContext,
-                                R.drawable.baseline_arrow_forward_ios_24
-                            ),
-                            "Video",
-                            "Descripcion",
-                            PendingIntent.getBroadcast(
-                                applicationContext,
-                                0,
-                                Intent(applicationContext, MyReceiver::class.java),
-                                PendingIntent.FLAG_IMMUTABLE
-                            )
-                        )
-                    )
-                )
-                .build()
-        } else null
-    }
-
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        if (!isPipSupported) {
-            return
-        }
-        updatedPipParams()?.let { params ->
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                enterPictureInPictureMode(params)
-            }
-        }
-    }
-
-
-private val palabras = listOf(
-    "Hola",
-    "Como",
-    "estás",
-    "Bien",
-    "Adiós",
-    "Por favor",
-    "Gracias",
-    "Amor",
-    "Familia",
-    "Amigo",
-    "Comida",
-    "Casa",
-    "Trabajo",
-    "Escuela",
-    "Libro",
-    "Música",
-    "Tiempo",
-    "Feliz",
-    "Triste",
-    "Bueno",
-    "Malo",
-    "Verde",
-    "Rojo",
-    "Azul",
-    "Amarillo",
-    "Gato",
-    "Perro",
-    "Sol",
-    "Luna",
-    "Mar",
-    "Montaña",
-    "Río",
-    "Árbol",
-    "Flor",
-    "Ciudad",
-    "Playa",
-    "Montaña",
-    "Viaje",
-    "Deporte",
-    "Cine",
-    "Música",
-    "Arte",
-    "Dinero",
-    "Felicidad",
-    "Amor",
-    "Paz",
-    "Salud"
-)
-}
-*/
